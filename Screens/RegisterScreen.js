@@ -18,7 +18,8 @@ const RegisterScreen = ({ navigation }) => {
   }, [navigation]);
 
   const register = () => {
-    auth.createUserWithEmailAndPassword
+    auth
+      .createUserWithEmailAndPassword(email, password)
       .then((authUser) => {
         authUser.user.update({
           displayName: name,
