@@ -16,8 +16,19 @@ import * as firebase from "firebase";
 
 const ChatScreen = ({ navigation, route }) => {
   const [input, setInput] = useState("");
+  const [messages, setMessages] = useState([]);
 
   useLayoutEffect(() => {
+    console.log(
+      "Route.Params.id:",
+      route.params.id,
+      "Route.params.chatName:",
+      route.params.chaName,
+      "AuthCurrentUser: ",
+      auth.currentUser.displayName,
+      "Message: ",
+      input
+    );
     navigation.setOptions({
       title: "Chat",
       headerBackTitleVisible: false,
@@ -81,6 +92,24 @@ const ChatScreen = ({ navigation, route }) => {
     setInput("");
   };
 
+  // GO GRAB ALL OF THE MESSAGES FROM THE CURRENT ROOM+++IN CHRONOLOGICAL ORDER++++AND SET "MESSAGES" ARRAY = TO THE MESSAGE OBJECT RETURNED FROM FIREBASE
+  useLayoutEffect(() => {
+    const unsubscribe = db
+      .collection("chats")
+      .doc(route.params.id)
+      .collection("messages")
+      .orderBy("timestamp", "desc")
+      .onSnapshot((snapshot) =>
+        setMessages(
+          snapshot.docs.map((doc) => ({
+            id: doc.id,
+            data: doc.data(),
+          }))
+        )
+      );
+    return unsubscribe;
+  }, [route]);
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
       <StatusBar style="light" />
@@ -92,7 +121,18 @@ const ChatScreen = ({ navigation, route }) => {
         {/* PRESS SCREEN TO DISMISS KEYBOARD !!!## */}
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <>
-            <ScrollView></ScrollView>
+            <ScrollView>
+              {messages.map(({ id, data }) =>
+                data.email === auth.currentUser.email ? (
+                  <View>
+                    <Avatar />
+                    <Text style={styles.receiverText}></Text>
+                  </View>
+                ) : (
+                  <View></View>
+                )
+              )}
+            </ScrollView>
             <View style={styles.footer}>
               <TextInput
                 value={input}
@@ -140,4 +180,5 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 2,
   },
+  receiverText: {},
 });
